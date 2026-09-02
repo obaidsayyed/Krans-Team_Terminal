@@ -7,6 +7,7 @@ from app.schemas.complaint import (
     ComplaintTrackingResponse,
 )
 from app.services.complaint_service import (
+    analyze_complaint,
     apply_ai_analysis,
     get_complaint_status,
     submit_complaint,
@@ -106,3 +107,46 @@ def submit_ai_analysis_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to apply AI analysis",
         )
+
+
+@router.post(
+    "/{tracking_id}/analyze",
+    summary="Trigger AI Agent analysis for a complaint",
+    description=(
+        "Invokes the Lyzr AI Agent to analyze the complaint text, extract "
+        "category, priority, target departments, and formal draft, and "
+        "transitions the complaint to ANALYZED status."
+    ),
+)
+def trigger_ai_analysis_endpoint(
+    tracking_id: str,
+):
+    try:
+        updated = analyze_complaint(tracking_id)
+        return updated
+
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        )
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        )
+
+    except Exception as exc:
+        print(f"AI analysis trigger error: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to execute AI analysis",
+        )
+

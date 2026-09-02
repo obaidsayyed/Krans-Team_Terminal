@@ -4,5 +4,6 @@ supabase
 pydantic
 pydantic-settings
 python-dotenv
+httpx
 pytest
 pytest-mock

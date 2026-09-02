@@ -8,11 +8,12 @@ The actual AI logic is owned by a separate team.
 When the AI agent is ready, implement this Protocol in `client.py`.
 """
 
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from app.schemas.ai_contract import AIAnalysisResult
 
 
+@runtime_checkable
 class AIAgentInterface(Protocol):
     """
     Protocol (structural interface) for an AI agent that analyses grievance

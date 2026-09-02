@@ -1,7 +1,10 @@
 import json
 
+from app.ai.client import AIAgentClient
 from app.core.constants import (
     AI_STATUS_COMPLETED,
+    AI_STATUS_FAILED,
+    AI_STATUS_PROCESSING,
     COMPLAINT_STATUS_ANALYZED,
     COMPLAINT_STATUS_SUBMITTED,
     DEPARTMENT_TYPE_SET,
@@ -106,3 +109,55 @@ def apply_ai_analysis(
     )
 
     return updated
+
+
+def analyze_complaint(
+    tracking_id: str,
+    ai_client: AIAgentClient | None = None,
+) -> dict:
+    """
+    Trigger AI analysis for an existing complaint using Lyzr AI Agent.
+    Fetches raw complaint text, sends it to Lyzr AI Agent, and persists
+    the structured analysis results.
+    """
+    complaint = get_complaint_by_tracking_id(tracking_id)
+    if complaint is None:
+        raise LookupError(f"Complaint not found: {tracking_id!r}")
+
+    # Mark as processing
+    try:
+        update_complaint_ai_analysis(
+            complaint["id"],
+            {"ai_status": AI_STATUS_PROCESSING},
+        )
+    except Exception:
+        pass
+
+    log_event(
+        complaint_id=complaint["id"],
+        status="AI_PROCESSING",
+        message="AI analysis started via Lyzr AI Agent",
+    )
+
+    client = ai_client or AIAgentClient()
+
+    try:
+        result = client.analyze(
+            complaint_text=complaint["raw_complaint"],
+            tracking_id=tracking_id,
+        )
+        return apply_ai_analysis(tracking_id, result)
+    except Exception as exc:
+        try:
+            update_complaint_ai_analysis(
+                complaint["id"],
+                {"ai_status": AI_STATUS_FAILED},
+            )
+            log_event(
+                complaint_id=complaint["id"],
+                status="AI_FAILED",
+                message=f"AI analysis failed: {exc}",
+            )
+        except Exception:
+            pass
+        raise
