@@ -1,0 +1,6 @@
+{
+  "name": "CivicPulse - Integrated Public Safety & Incident Response System",
+  "description": "Multi-department emergency SOS and civic incident management platform featuring dedicated dashboards for Citizens, Central Admin, Police, RTO, Hospital/EMS, Fire & Rescue, and Municipal Corporation with real-time tracking, GPS evidence capture, and ringing dispatch notifications.",
+  "requestFramePermissions": ["geolocation", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
